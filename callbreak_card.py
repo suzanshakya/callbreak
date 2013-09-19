@@ -39,7 +39,11 @@ class Card:
 
 class Deck:
     def __init__(self):
-        self.cards = [Card(f, s) for s in Suits for f in Faces]
+        self.cards = []
+        self.load()
+
+    def load(self):
+        self.cards[:] = [Card(f, s) for s in Suits for f in Faces]
 
 
 class GameTurn:
@@ -69,7 +73,7 @@ class GameTurn:
         turn = self.starter.turn
         while True:
             yield self.players[turn]
-            turn = (turn + 1) % len(players)
+            turn = (turn + 1) % len(self.players)
             if turn == self.starter.turn:
                 return
 
@@ -87,10 +91,14 @@ class CallBreak:
         # TODO use different object for storing all cards when no_of_decks > 1
         self.cards = self.deck.cards
 
-    def start(self):
+#    def collect(self):
+#        self.deck.load()
+
+    def ready(self):
         self.shuffle()
         self.distribute()
 
+    def start(self):
         starter = self.players[self.round_count]
         for i in xrange(13):
             turn = GameTurn(starter, self.players)
@@ -185,4 +193,5 @@ if __name__ == '__main__':
     players = [sujan, sudeep, santosh, rupa]
 
     game = CallBreak(players)
+    game.ready()
     game.start()
