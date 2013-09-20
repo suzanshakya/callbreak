@@ -91,9 +91,6 @@ class CallBreak:
         # TODO use different object for storing all cards when no_of_decks > 1
         self.cards = self.deck.cards
 
-#    def collect(self):
-#        self.deck.load()
-
     def ready(self):
         self.shuffle()
         self.distribute()

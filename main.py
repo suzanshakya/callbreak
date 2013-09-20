@@ -133,7 +133,7 @@ def unionall_rects(rects):
 Player_play = Player.play
 def play(self, turn):
     if self.is_bot:
-        time.sleep(2)
+        time.sleep(1)
     playerui = self.ui
     dirty_rects = playerui.dirty_rects
     big_rect = unionall_rects(dirty_rects)
@@ -167,7 +167,7 @@ Player.wait_until_human_plays = wait_until_human_plays
 GameTurn_start = GameTurn.start
 def start(self):
     winning_card = GameTurn_start(self)
-    time.sleep(2)
+    time.sleep(1)
 
     dirty_rects = []
     for player in self.players:
@@ -225,18 +225,16 @@ class CallBreakUI:
 
         players = [player1_ui, player2_ui, player3_ui, player4_ui]
         game = CallBreak([ui.player for ui in players])
-        game.ready()
 
-        for player in players:
-            player.display()
-
-        pygame.display.update()
-
-        game.start()
-
-        clock = pygame.time.Clock()
         while True:
-             clock.tick(FPS)
+            game.ready()
+
+            for player in players:
+                player.display()
+
+            pygame.display.update()
+
+            game.start()
 
             # Android-specific:
             #if android:
