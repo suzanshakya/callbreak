@@ -52,12 +52,12 @@ class CardUI:
 
 
 class PlayerUI:
-    cards_v_spacing = 20
+    cards_v_spacing = 30
     cards_h_spacing = 35
 
-    __player_mappings = {}
-
     def __init__(self, player, screen, center_position, orientation, hide=False):
+        player.ui = self
+
         self.player = player
         self.screen = screen
         self.center_position = center_position
@@ -74,15 +74,9 @@ class PlayerUI:
         self.dirty_rects = []
         self.throw_rect = self.calculate_throw_rect()
 
-        PlayerUI.__player_mappings[player] = self
-
         if not hide:
-            self.cards_v_spacing = 25
+            self.cards_v_spacing = 30
             self.cards_h_spacing = 35
-
-    @classmethod
-    def for_player(cls, player):
-        return cls.__player_mappings[player]
 
     def calculate_throw_rect(self):
         h_offset = 150
@@ -100,7 +94,7 @@ class PlayerUI:
 
     def throw(self, card):
         position = self.throw_rect.x, self.throw_rect.y
-        CardUI(card, self.screen).display(position, hide=False)
+        card.ui.display(position, hide=False)
 
     def clear_thrown(self):
         card_rect = load_image(get_back_image()).get_rect()
@@ -118,16 +112,15 @@ class PlayerUI:
             x = self.center_position[0]
             y = self.center_position[1] - (total_cards - 1) / 2.0 * self.cards_v_spacing
 
-        for card_set in self.player.cards:
-            for card in card_set:
-                cardui = CardUI(card, self.screen)
-                rect = cardui.display((x, y), hide=self.hide)
-                self.dirty_rects.append(rect)
+        for card in self.player.all_cards:
+            cardui = hasattr(card, 'ui') and card.ui or CardUI(card, self.screen)
+            rect = cardui.display((x, y), hide=self.hide)
+            self.dirty_rects.append(rect)
 
-                if self.horizontally:
-                    x += self.cards_h_spacing
-                else:
-                    y += self.cards_v_spacing
+            if self.horizontally:
+                x += self.cards_h_spacing
+            else:
+                y += self.cards_v_spacing
 
 def get_device_resolution():
     resolutions = pygame.display.list_modes()
@@ -139,7 +132,9 @@ def unionall_rects(rects):
 
 Player_play = Player.play
 def play(self, turn):
-    playerui = PlayerUI.for_player(self)
+    if self.is_bot:
+        time.sleep(2)
+    playerui = self.ui
     dirty_rects = playerui.dirty_rects
     big_rect = unionall_rects(dirty_rects)
     playerui.screen.fill(WHITE, big_rect)
@@ -149,7 +144,6 @@ def play(self, turn):
     playerui.throw(card)
 
     pygame.display.update(big_rect)
-    time.sleep(2)
     return card
 Player.play = play
 
@@ -173,10 +167,11 @@ Player.wait_until_human_plays = wait_until_human_plays
 GameTurn_start = GameTurn.start
 def start(self):
     winning_card = GameTurn_start(self)
+    time.sleep(2)
 
     dirty_rects = []
     for player in self.players:
-        playerui = PlayerUI.for_player(player)
+        playerui = player.ui
         dirty_rects.append(playerui.throw_rect)
 
     throw_area = unionall_rects(dirty_rects)
