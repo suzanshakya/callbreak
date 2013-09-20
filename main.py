@@ -1,5 +1,5 @@
 import os
-import itertools
+import time
 
 import pygame
 from pygame.locals import *
@@ -7,7 +7,7 @@ from pygame.locals import *
 from callbreak_card import CallBreak, Card, Deck, GameTurn, Player
 
 WHITE = (255, 255, 255)
-FPS = 1
+FPS = 10
 clock = pygame.time.Clock()
 
 try:
@@ -34,6 +34,8 @@ def load_image(path):
 
 class CardUI:
     def __init__(self, card, screen):
+        card.ui = self
+
         self.card = card
         self.screen = screen
 
@@ -45,10 +47,8 @@ class CardUI:
             image = self.back_image
         else:
             image = self.image
-        self.screen.blit(image, position)
-        rect = image.get_rect()
-        rect.x, rect.y = position
-        return rect
+        self.rect = self.screen.blit(image, position)
+        return self.rect
 
 
 class PlayerUI:
@@ -110,7 +110,7 @@ class PlayerUI:
 
     def display(self):
         self.dirty_rects[:] = []
-        total_cards = len(list(itertools.chain.from_iterable(self.player.cards)))
+        total_cards = len(self.player.all_cards)
         if self.horizontally:
             x = self.center_position[0] - (total_cards - 1) / 2.0 * self.cards_h_spacing
             y = self.center_position[1]
@@ -136,8 +136,8 @@ def get_device_resolution():
 def unionall_rects(rects):
     return pygame.Rect(rects[0]).unionall(rects[1:])
 
-Player_play = Player.play
 
+Player_play = Player.play
 def play(self, turn):
     playerui = PlayerUI.for_player(self)
     dirty_rects = playerui.dirty_rects
@@ -149,14 +149,28 @@ def play(self, turn):
     playerui.throw(card)
 
     pygame.display.update(big_rect)
-    clock.tick(FPS)
+    time.sleep(2)
     return card
-
 Player.play = play
 
 
-GameTurn_start = GameTurn.start
+def wait_until_human_plays(self, turn, legal_cards):
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                x, y = event.pos
+                for card in self.all_cards[::-1]:
+                    if card.ui.rect.collidepoint(x, y):
+                        if card in legal_cards:
+                            pygame.event.clear()
+                            return card
+                        else:
+                            break
+        clock.tick(FPS)
+Player.wait_until_human_plays = wait_until_human_plays
 
+
+GameTurn_start = GameTurn.start
 def start(self):
     winning_card = GameTurn_start(self)
 
@@ -168,9 +182,7 @@ def start(self):
     throw_area = unionall_rects(dirty_rects)
     playerui.screen.fill(WHITE, throw_area)
     pygame.display.update(throw_area)
-    clock.tick(FPS)
     return winning_card
-
 GameTurn.start = start
 
 
@@ -199,19 +211,19 @@ class CallBreakUI:
         player1 = Player('Sujan', is_bot=True)
         player2 = Player('Sudeep', is_bot=True)
         player3 = Player('Santosh', is_bot=True)
-        player4 = Player('Rupa', is_bot=True)
+        player4 = Player('Rupa', is_bot=False)
 
         card_rect = load_image(get_back_image()).get_rect()
         padding = {'left': 20, 'top': 20, 'right': 20, 'bottom': 20}  # top, right, bottom, left
 
         position = (padding['left'], (self.board[1] - card_rect.height)/2.0)
-        player1_ui = PlayerUI(player1, self.screen, position, 'left', hide=True)
+        player1_ui = PlayerUI(player1, self.screen, position, 'left', hide=False)
 
         position = ((self.board[0] - card_rect.width)/2.0, padding['top'])
-        player2_ui = PlayerUI(player2, self.screen, position, 'top', hide=True)
+        player2_ui = PlayerUI(player2, self.screen, position, 'top', hide=False)
 
         position = (self.board[0] - padding['right'] - card_rect.width, (self.board[1] - card_rect.height)/2.0)
-        player3_ui = PlayerUI(player3, self.screen, position, 'right', hide=True)
+        player3_ui = PlayerUI(player3, self.screen, position, 'right', hide=False)
 
         position = ((self.board[0] - card_rect.width)/2.0, self.board[1] - padding['bottom'] - card_rect.height)
         player4_ui = PlayerUI(player4, self.screen, position, 'bottom', hide=False)
@@ -222,6 +234,8 @@ class CallBreakUI:
 
         for player in players:
             player.display()
+
+        pygame.display.update()
 
         game.start()
 

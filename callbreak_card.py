@@ -122,6 +122,10 @@ class Player:
         self.turn = None  # overriden by int in CallBreak
         self.cards = [[], [], [], []]
 
+    @property
+    def all_cards(self):
+        return list(itertools.chain.from_iterable(self.cards))
+
     def collect(self, card):
         card.owner = self
         self.cards[card.suit.order].append(card)
@@ -148,29 +152,29 @@ class Player:
             if greater_cards:
                 return greater_cards, True
 
-        all_cards = list(itertools.chain.from_iterable(self.cards))
-        return all_cards, False
+        return self.all_cards, False
 
-    def think_to_play(self, turn):
+    def think_to_play(self, turn, legal_cards, has_greater_card):
         if not self.is_bot:
             raise Exception('Humans cannot use machine brain.')
 
-        legal_cards, has_greater_card = self.get_legal_cards(turn)
         if has_greater_card and len(turn.cards) < 3:
             return max(legal_cards)
         else:
             return min(legal_cards)
 
-    def wait_until_human_plays(self, turn):
+    def wait_until_human_plays(self, turn, legal_cards):
         raise NotImplementedError('coming soon ...')
 
     def play(self, turn):
         print "%s's cards:" % self.name, self.cards
 
+        legal_cards, has_greater_card = self.get_legal_cards(turn)
+
         if self.is_bot:
-            card = self.think_to_play(turn)
+            card = self.think_to_play(turn, legal_cards, has_greater_card)
         else:
-            card = self.wait_until_human_plays(turn)
+            card = self.wait_until_human_plays(turn, legal_cards)
 
         self.cards[card.suit.order].remove(card)
 
