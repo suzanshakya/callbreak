@@ -39,21 +39,18 @@ def get_animation_positions(pos1, pos2, fps, delay):
     return points
 
 def get_front_image(card):
-    suit_name = card.suit.name[0].lower()
-    face_name = card.face.name.lower()
-    if face_name == '10':
-        face_name = 't'
+    suit_name = card.suit.name[0].upper()
+    face_name = card.face.name.upper()
     img = '%s%s.gif' % (face_name, suit_name)
     return img
 
 def get_back_image():
-    return 'b.gif'
+    return 'Back.gif'
 
 def load_image(path):
-#    path = '2C.eps'
-    fullpath = os.path.join('data/img', path)
+    fullpath = os.path.join('data/out', path)
     image = pygame.image.load(fullpath)
-    image = image.convert()
+    image = image.convert_alpha()
     return image
 
 class CardUI:
@@ -248,8 +245,8 @@ class CallBreakUI:
         self.screen.fill(WHITE)
         pygame.display.set_caption('CallBreak')
 
-        icon = load_image("icon.png")
-        pygame.display.set_icon(icon)
+#        icon = load_image("icon.png")
+#        pygame.display.set_icon(icon)
 
     def MainLoop(self):
         player1 = Player('Sujan', is_bot=True)
@@ -261,13 +258,13 @@ class CallBreakUI:
         padding = {'left': 20, 'top': 20, 'right': 20, 'bottom': 20}  # top, right, bottom, left
 
         position = (padding['left'], (self.board[1] - card_rect.height)/2.0)
-        player1_ui = PlayerUI(player1, self.screen, position, 'left', hide=False)
+        player1_ui = PlayerUI(player1, self.screen, position, 'left', hide=True)
 
         position = ((self.board[0] - card_rect.width)/2.0, padding['top'])
-        player2_ui = PlayerUI(player2, self.screen, position, 'top', hide=False)
+        player2_ui = PlayerUI(player2, self.screen, position, 'top', hide=True)
 
         position = (self.board[0] - padding['right'] - card_rect.width, (self.board[1] - card_rect.height)/2.0)
-        player3_ui = PlayerUI(player3, self.screen, position, 'right', hide=False)
+        player3_ui = PlayerUI(player3, self.screen, position, 'right', hide=True)
 
         position = ((self.board[0] - card_rect.width)/2.0, self.board[1] - padding['bottom'] - card_rect.height)
         player4_ui = PlayerUI(player4, self.screen, position, 'bottom', hide=False)
