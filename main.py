@@ -89,11 +89,12 @@ class PlayerUI:
     cards_v_spacing = 30
     cards_h_spacing = 35
 
-    def __init__(self, player, screen, center_position, orientation, hide=False):
+    def __init__(self, player, screen, board, center_position, orientation, hide=False):
         player.ui = self
 
         self.player = player
         self.screen = screen
+        self.board = board
         self.center_position = center_position
         self.orientation = orientation
 
@@ -105,6 +106,7 @@ class PlayerUI:
             raise Exception("Orientation %r is not supported." % orientation)
 
         self.hide = hide
+        self.card_rect = load_image(get_back_image()).get_rect()  # used for its dimension
         self.throw_rect = self.calculate_throw_rect()
         self.dirty_rects = []
         self.rect = None  # set by display(), union rect of this players card
@@ -114,18 +116,15 @@ class PlayerUI:
             self.cards_h_spacing = 35
 
     def calculate_throw_rect(self):
-        h_offset = 175
-        v_offset = 280
         offsets = {
-            'left': (h_offset, 0),
-            'top': (0, v_offset),
-            'right': (-h_offset, 0),
-            'bottom': (0, -v_offset)
+            'left': (self.board[0]/2 - self.card_rect.width, 0),
+            'top': (0, self.board[1]/2 - self.card_rect.height),
+            'right': (self.card_rect.width  - self.board[0]/2, 0),
+            'bottom': (0, self.card_rect.height - self.board[1]/2)
         }
-        card_rect = load_image(get_back_image()).get_rect()
         position = map(sum, zip(self.center_position, offsets[self.orientation]))
-        card_rect.x, card_rect.y = position
-        return card_rect
+        self.card_rect.x, self.card_rect.y = position
+        return self.card_rect
 
     def collidepoint(x, y):
         return self.rect.collidepoint(x, y)
@@ -141,8 +140,7 @@ class PlayerUI:
             card.ui.move(self.center_position, callback=self.display, delay=0.1)
 
     def clear_thrown(self):
-        card_rect = load_image(get_back_image()).get_rect()
-        card_rect.x, card_rect.y = self.throw_position
+        self.card_rect.x, self.card_rect.y = self.throw_position
         self.screen.fill(WHITE, card_rect)
         return card_rect
 
@@ -150,11 +148,11 @@ class PlayerUI:
         self.dirty_rects[:] = []
         total_cards = len(self.player.all_cards)
         if self.horizontally:
-            x = self.center_position[0] - (total_cards - 1) / 2.0 * self.cards_h_spacing
+            x = self.center_position[0] - (total_cards - 1) / 2 * self.cards_h_spacing
             y = self.center_position[1]
         else:
             x = self.center_position[0]
-            y = self.center_position[1] - (total_cards - 1) / 2.0 * self.cards_v_spacing
+            y = self.center_position[1] - (total_cards - 1) / 2 * self.cards_v_spacing
 
         for card in self.player.all_cards:
             cardui = hasattr(card, 'ui') and card.ui or CardUI(card, self.screen)
@@ -257,17 +255,17 @@ class CallBreakUI:
         card_rect = load_image(get_back_image()).get_rect()
         padding = {'left': 20, 'top': 20, 'right': 20, 'bottom': 20}  # top, right, bottom, left
 
-        position = (padding['left'], (self.board[1] - card_rect.height)/2.0)
-        player1_ui = PlayerUI(player1, self.screen, position, 'left', hide=True)
+        position = (padding['left'], (self.board[1] - card_rect.height)/2)
+        player1_ui = PlayerUI(player1, self.screen, self.board, position, 'left', hide=True)
 
-        position = ((self.board[0] - card_rect.width)/2.0, padding['top'])
-        player2_ui = PlayerUI(player2, self.screen, position, 'top', hide=True)
+        position = ((self.board[0] - card_rect.width)/2, padding['top'])
+        player2_ui = PlayerUI(player2, self.screen, self.board, position, 'top', hide=True)
 
-        position = (self.board[0] - padding['right'] - card_rect.width, (self.board[1] - card_rect.height)/2.0)
-        player3_ui = PlayerUI(player3, self.screen, position, 'right', hide=True)
+        position = (self.board[0] - padding['right'] - card_rect.width, (self.board[1] - card_rect.height)/2)
+        player3_ui = PlayerUI(player3, self.screen, self.board, position, 'right', hide=True)
 
-        position = ((self.board[0] - card_rect.width)/2.0, self.board[1] - padding['bottom'] - card_rect.height)
-        player4_ui = PlayerUI(player4, self.screen, position, 'bottom', hide=False)
+        position = ((self.board[0] - card_rect.width)/2, self.board[1] - padding['bottom'] - card_rect.height)
+        player4_ui = PlayerUI(player4, self.screen, self.board, position, 'bottom', hide=False)
 
         players = [player1_ui, player2_ui, player3_ui, player4_ui]
         game = CallBreak([ui.player for ui in players])
