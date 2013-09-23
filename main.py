@@ -75,6 +75,10 @@ class CardUI:
         self.rect = self.screen.blit(image, position)
         return self.rect
 
+    def redraw(self):
+        # only once displayed cards can be moved
+        self.display(self.rect)
+
     def move(self, new_pos, callback=None, delay=0.1, hide=False):
         # only once displayed cards can be moved
         last_sprite_rect = self.rect
@@ -138,8 +142,12 @@ class PlayerUI:
     def colliderect(self, rect):
         return self.rect.colliderect(rect)
 
-    def throw(self, card):
+    def throw(self, card, turn):
         card.ui.move(self.throw_rect, callback=self.display, delay=0.1)
+        for c in turn.cards:
+            c.ui.redraw()
+        card.ui.redraw()
+        pygame.display.update()
 
     def collect(self, cards):
         for card in cards:
@@ -200,7 +208,7 @@ def play(self, turn):
     playerui.screen.fill(WHITE, playerui.rect)
 
     card = Player_play(self, turn)
-    playerui.throw(card)
+    playerui.throw(card, turn)
     return card
 Player.play = play
 
