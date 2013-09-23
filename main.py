@@ -47,6 +47,9 @@ def get_front_image(card):
 def get_back_image():
     return 'Back.gif'
 
+def get_card_image():
+    return '2C.gif'
+
 def load_image(path):
     fullpath = os.path.join('data/out', path)
     image = pygame.image.load(fullpath)
@@ -72,12 +75,15 @@ class CardUI:
         self.rect = self.screen.blit(image, position)
         return self.rect
 
-    def move(self, new_pos, callback=None, delay=0.1):
+    def move(self, new_pos, callback=None, delay=0.1, hide=False):
         # only once displayed cards can be moved
         last_sprite_rect = self.rect
-        for position in get_animation_positions(self.rect, new_pos, FPS, delay):
+        positions = get_animation_positions(self.rect, new_pos, FPS, delay)
+        for i, position in enumerate(positions):
             self.screen.fill(WHITE, last_sprite_rect)
             last_sprite_rect = self.display(position)
+            if hide and i == len(positions) - 1:
+                self.screen.fill(WHITE, last_sprite_rect)
             if callback:
                 callback()
             pygame.display.update()
@@ -106,7 +112,7 @@ class PlayerUI:
             raise Exception("Orientation %r is not supported." % orientation)
 
         self.hide = hide
-        self.card_rect = load_image(get_back_image()).get_rect()  # used for its dimension
+        self.card_rect = load_image(get_card_image()).get_rect()  # used for its dimension
         self.throw_rect = self.calculate_throw_rect()
         self.dirty_rects = []
         self.rect = None  # set by display(), union rect of this players card
@@ -137,7 +143,7 @@ class PlayerUI:
 
     def collect(self, cards):
         for card in cards:
-            card.ui.move(self.center_position, callback=self.display, delay=0.1)
+            card.ui.move(self.center_position, callback=self.display, delay=0.1, hide=True)
 
     def clear_thrown(self):
         self.card_rect.x, self.card_rect.y = self.throw_position
@@ -252,7 +258,7 @@ class CallBreakUI:
         player3 = Player('Santosh', is_bot=True)
         player4 = Player('Rupa', is_bot=False)
 
-        card_rect = load_image(get_back_image()).get_rect()
+        card_rect = load_image(get_card_image()).get_rect()
         padding = {'left': 20, 'top': 20, 'right': 20, 'bottom': 20}  # top, right, bottom, left
 
         position = (padding['left'], (self.board[1] - card_rect.height)/2)
