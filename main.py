@@ -79,14 +79,14 @@ class CardUI:
         # only once displayed cards can be moved
         self.display(self.rect)
 
-    def move(self, new_pos, callback=None, delay=0.1, hide=False):
+    def move(self, new_pos, callback=None, delay=0.1, disappear=False):
         # only once displayed cards can be moved
         last_sprite_rect = self.rect
         positions = get_animation_positions(self.rect, new_pos, FPS, delay)
         for i, position in enumerate(positions):
             self.screen.fill(WHITE, last_sprite_rect)
             last_sprite_rect = self.display(position)
-            if hide and i == len(positions) - 1:
+            if disappear and i == len(positions) - 1:
                 self.screen.fill(WHITE, last_sprite_rect)
             if callback:
                 callback()
@@ -151,7 +151,7 @@ class PlayerUI:
 
     def collect(self, cards):
         for card in cards:
-            card.ui.move(self.center_position, callback=self.display, delay=0.1, hide=True)
+            card.ui.move(self.center_position, callback=self.display, delay=0.1, disappear=True)
 
     def clear_thrown(self):
         self.card_rect.x, self.card_rect.y = self.throw_position
