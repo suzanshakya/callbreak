@@ -1,3 +1,4 @@
+from __future__ import division
 import os
 import time
 
@@ -7,13 +8,35 @@ from pygame.locals import *
 from callbreak_card import CallBreak, Card, Deck, GameTurn, Player
 
 WHITE = (255, 255, 255)
-FPS = 10
+BLUE = (0, 0, 255)
+FPS = 30
 clock = pygame.time.Clock()
 
 try:
     import android
 except ImportError:
     android = None
+
+def get_points(pos1, pos2, fps, delay):
+    if hasattr(pos1, 'x'):
+        x1, y1 = pos1.x, pos1.y
+    else:
+        x1, y1 = pos1
+    if hasattr(pos2, 'x'):
+        x2, y2 = pos2.x, pos2.y
+    else:
+        x2, y2 = pos2
+    num = int(fps * delay)
+
+    delta_x = (x2 - x1)/num
+    delta_y = (y2 - y1)/num
+    points = []
+    x, y = x1, y1
+    for i in xrange(num):
+        x += delta_x
+        y += delta_y
+        points.append((x, y))
+    return points
 
 def get_front_image(card):
     suit_name = card.suit.name[0].lower()
@@ -27,6 +50,7 @@ def get_back_image():
     return 'b.gif'
 
 def load_image(path):
+#    path = '2C.eps'
     fullpath = os.path.join('data/img', path)
     image = pygame.image.load(fullpath)
     image = image.convert()
@@ -38,6 +62,7 @@ class CardUI:
 
         self.card = card
         self.screen = screen
+        self.rect = None
 
         self.image = load_image(get_front_image(self.card))
         self.back_image = load_image(get_back_image())
@@ -49,6 +74,18 @@ class CardUI:
             image = self.image
         self.rect = self.screen.blit(image, position)
         return self.rect
+
+    def move(self, new_pos, callback=None, delay=0.1):
+        # only once displayed cards can be moved
+        last_sprite_rect = self.rect
+        for position in get_points(self.rect, new_pos, FPS, delay):
+            self.screen.fill(WHITE, last_sprite_rect)
+            last_sprite_rect = self.display(position)
+            if callback:
+                callback()
+            pygame.display.update()
+            clock.tick(FPS)
+        return last_sprite_rect
 
 
 class PlayerUI:
@@ -71,16 +108,17 @@ class PlayerUI:
             raise Exception("Orientation %r is not supported." % orientation)
 
         self.hide = hide
-        self.dirty_rects = []
         self.throw_rect = self.calculate_throw_rect()
+        self.dirty_rects = []
+        self.rect = None  # set by display(), union rect of this players card
 
         if not hide:
             self.cards_v_spacing = 30
             self.cards_h_spacing = 35
 
     def calculate_throw_rect(self):
-        h_offset = 150
-        v_offset = 200
+        h_offset = 175
+        v_offset = 280
         offsets = {
             'left': (h_offset, 0),
             'top': (0, v_offset),
@@ -92,9 +130,18 @@ class PlayerUI:
         card_rect.x, card_rect.y = position
         return card_rect
 
+    def collidepoint(x, y):
+        return self.rect.collidepoint(x, y)
+
+    def colliderect(self, rect):
+        return self.rect.colliderect(rect)
+
     def throw(self, card):
-        position = self.throw_rect.x, self.throw_rect.y
-        card.ui.display(position, hide=False)
+        card.ui.move(self.throw_rect, callback=self.display, delay=0.1)
+
+    def collect(self, cards):
+        for card in cards:
+            card.ui.move(self.center_position, callback=self.display, delay=0.1)
 
     def clear_thrown(self):
         card_rect = load_image(get_back_image()).get_rect()
@@ -121,13 +168,27 @@ class PlayerUI:
                 x += self.cards_h_spacing
             else:
                 y += self.cards_v_spacing
+        self.rect = unionall_rects(self.dirty_rects)
 
 def get_device_resolution():
     resolutions = pygame.display.list_modes()
     return resolutions[0]
 
 def unionall_rects(rects):
-    return pygame.Rect(rects[0]).unionall(rects[1:])
+    if len(rects) > 0:
+        return pygame.Rect(rects[0]).unionall(rects[1:])
+
+
+GameTurn_start = GameTurn.start
+def start(self):
+    winning_card = GameTurn_start(self)
+    winner = winning_card.owner
+    time.sleep(1)
+
+    winner.ui.collect(self.cards)
+
+    return winning_card
+GameTurn.start = start
 
 
 Player_play = Player.play
@@ -135,15 +196,10 @@ def play(self, turn):
     if self.is_bot:
         time.sleep(1)
     playerui = self.ui
-    dirty_rects = playerui.dirty_rects
-    big_rect = unionall_rects(dirty_rects)
-    playerui.screen.fill(WHITE, big_rect)
+    playerui.screen.fill(WHITE, playerui.rect)
 
     card = Player_play(self, turn)
-    playerui.display()
     playerui.throw(card)
-
-    pygame.display.update(big_rect)
     return card
 Player.play = play
 
@@ -151,6 +207,16 @@ Player.play = play
 def wait_until_human_plays(self, turn, legal_cards):
     while True:
         for event in pygame.event.get():
+            # Android-specific:
+            if android:
+                if android.check_pause():
+                    android.wait_for_resume()
+
+                    for player in turn.players:
+                        player.ui.display()
+
+                    pygame.display.update()
+
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
                 for card in self.all_cards[::-1]:
@@ -162,23 +228,6 @@ def wait_until_human_plays(self, turn, legal_cards):
                             break
         clock.tick(FPS)
 Player.wait_until_human_plays = wait_until_human_plays
-
-
-GameTurn_start = GameTurn.start
-def start(self):
-    winning_card = GameTurn_start(self)
-    time.sleep(1)
-
-    dirty_rects = []
-    for player in self.players:
-        playerui = player.ui
-        dirty_rects.append(playerui.throw_rect)
-
-    throw_area = unionall_rects(dirty_rects)
-    playerui.screen.fill(WHITE, throw_area)
-    pygame.display.update(throw_area)
-    return winning_card
-GameTurn.start = start
 
 
 class CallBreakUI:
@@ -193,7 +242,7 @@ class CallBreakUI:
             self.resolution = (540, 960)
 
         self.board = self.resolution[0], self.resolution[1] * 0.8
-        pygame.time.set_timer(pygame.USEREVENT, 1000 / FPS)
+        pygame.time.set_timer(pygame.USEREVENT, int(1000 / FPS))
 
         self.screen = pygame.display.set_mode(self.resolution)
         self.screen.fill(WHITE)
