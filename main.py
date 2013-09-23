@@ -5,7 +5,7 @@ import time
 import pygame
 from pygame.locals import *
 
-from callbreak_card import CallBreak, Card, Deck, GameTurn, Player
+from callbreak_card import CallBreak, GameTurn, Player
 
 WHITE = (255, 255, 255)
 BLUE = (0, 0, 255)
@@ -17,7 +17,7 @@ try:
 except ImportError:
     android = None
 
-def get_points(pos1, pos2, fps, delay):
+def get_animation_positions(pos1, pos2, fps, delay):
     if hasattr(pos1, 'x'):
         x1, y1 = pos1.x, pos1.y
     else:
@@ -78,7 +78,7 @@ class CardUI:
     def move(self, new_pos, callback=None, delay=0.1):
         # only once displayed cards can be moved
         last_sprite_rect = self.rect
-        for position in get_points(self.rect, new_pos, FPS, delay):
+        for position in get_animation_positions(self.rect, new_pos, FPS, delay):
             self.screen.fill(WHITE, last_sprite_rect)
             last_sprite_rect = self.display(position)
             if callback:
