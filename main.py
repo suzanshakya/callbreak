@@ -56,6 +56,66 @@ def load_image(path):
     image = image.convert_alpha()
     return image
 
+def get_device_resolution():
+    resolutions = pygame.display.list_modes()
+    return resolutions[0]
+
+def unionall_rects(rects):
+    if len(rects) > 0:
+        return pygame.Rect(rects[0]).unionall(rects[1:])
+
+
+GameTurn_start = GameTurn.start
+def start(self):
+    winning_card = GameTurn_start(self)
+    winner = winning_card.owner
+    time.sleep(1)
+
+    winner.ui.collect(self.cards)
+
+    return winning_card
+GameTurn.start = start
+
+
+Player_play = Player.play
+def play(self, turn):
+    if self.is_bot:
+        time.sleep(1)
+    playerui = self.ui
+    playerui.screen.fill(WHITE, playerui.rect)
+
+    card = Player_play(self, turn)
+    playerui.throw(card, turn)
+    return card
+Player.play = play
+
+
+def wait_until_human_plays(self, turn, legal_cards):
+    while True:
+        for event in pygame.event.get():
+            # Android-specific:
+            if android:
+                if android.check_pause():
+                    android.wait_for_resume()
+
+                    for player in turn.players:
+                        player.ui.display()
+
+                    pygame.display.update()
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                x, y = event.pos
+                for card in self.all_cards[::-1]:
+                    if card.ui.rect.collidepoint(x, y):
+                        if card in legal_cards:
+                            pygame.event.clear()
+                            return card
+                        else:
+                            break
+        clock.tick(FPS)
+Player.wait_until_human_plays = wait_until_human_plays
+
+
 class CardUI:
     def __init__(self, card, screen):
         card.ui = self
@@ -189,65 +249,6 @@ class PlayerUI:
                 y += self.cards_v_spacing
         self.rect = unionall_rects(self.dirty_rects)
 
-def get_device_resolution():
-    resolutions = pygame.display.list_modes()
-    return resolutions[0]
-
-def unionall_rects(rects):
-    if len(rects) > 0:
-        return pygame.Rect(rects[0]).unionall(rects[1:])
-
-
-GameTurn_start = GameTurn.start
-def start(self):
-    winning_card = GameTurn_start(self)
-    winner = winning_card.owner
-    time.sleep(1)
-
-    winner.ui.collect(self.cards)
-
-    return winning_card
-GameTurn.start = start
-
-
-Player_play = Player.play
-def play(self, turn):
-    if self.is_bot:
-        time.sleep(1)
-    playerui = self.ui
-    playerui.screen.fill(WHITE, playerui.rect)
-
-    card = Player_play(self, turn)
-    playerui.throw(card, turn)
-    return card
-Player.play = play
-
-
-def wait_until_human_plays(self, turn, legal_cards):
-    while True:
-        for event in pygame.event.get():
-            # Android-specific:
-            if android:
-                if android.check_pause():
-                    android.wait_for_resume()
-
-                    for player in turn.players:
-                        player.ui.display()
-
-                    pygame.display.update()
-
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                x, y = event.pos
-                for card in self.all_cards[::-1]:
-                    if card.ui.rect.collidepoint(x, y):
-                        if card in legal_cards:
-                            pygame.event.clear()
-                            return card
-                        else:
-                            break
-        clock.tick(FPS)
-Player.wait_until_human_plays = wait_until_human_plays
-
 
 class CallBreakUI:
     def __init__(self):
@@ -297,6 +298,7 @@ class CallBreakUI:
             #if android:
             #    if android.check_pause():
             #        android.wait_for_resume()
+
 
 def main():
     cb_ui = CallBreakUI()
