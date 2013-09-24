@@ -181,28 +181,27 @@ class PlayerUI:
             return self.visible_card_rect
 
     def set_dimensions(self):
-        _pad = 5
-        padding = {'left': _pad, 'top': _pad, 'right': _pad, 'bottom': _pad}  # top, right, bottom, left
+        padding = 5
 
         self.cards_v_spacing = 15 if self.hide else 30
         self.cards_h_spacing = 20 if self.hide else (
-            self.board[0] - padding['left'] - padding['right'] - self.card_rect.width)/(13 - 1)
+            self.board[0] - 2*padding - self.card_rect.width)/(13 - 1)
 
         if self.orientation == 'left':
-            position = padding['left'], (self.board[1] - self.visible_card_rect.height - self.card_rect.height)/2
+            position = padding, (self.board[1] - self.visible_card_rect.height - self.card_rect.height)/2
             throw_position = self.board[0]/2 - self.visible_card_rect.width, (
                                 self.board[1] + self.hidden_card_rect.height)/2 - self.visible_card_rect.height
         elif self.orientation == 'top':
-            position = (self.board[0] - self.card_rect.width)/2, padding['top']
-            throw_position = (self.board[0] - self.visible_card_rect.width)/2, (self.board[1] + self.hidden_card_rect.height - 3*self.visible_card_rect.height)/2
+            position = (self.board[0] - self.card_rect.width)/2, padding
+            throw_position = (self.board[0] - self.visible_card_rect.width)/2, (self.board[1] + self.card_rect.height - 3*self.visible_card_rect.height)/2
         elif self.orientation == 'right':
-            position = self.board[0] - padding['right'] - self.card_rect.width, \
+            position = self.board[0] - padding - self.card_rect.width, \
                         (self.board[1] - self.visible_card_rect.height - self.card_rect.height)/2
             throw_position = self.board[0]/2, (
                                 self.board[1] + self.hidden_card_rect.height)/2 - self.visible_card_rect.height
         elif self.orientation == 'bottom':
-            position = (self.board[0] - self.card_rect.width)/2, self.board[1] - padding['bottom'] - self.card_rect.height
-            throw_position = (self.board[0] - self.visible_card_rect.width)/2, (self.board[1] - self.visible_card_rect.height + self.hidden_card_rect.height)/2
+            position = (self.board[0] - self.card_rect.width)/2, self.board[1] - padding - self.card_rect.height
+            throw_position = (self.board[0] - self.visible_card_rect.width)/2, (self.board[1] - self.card_rect.height + self.hidden_card_rect.height)/2
         else:
             raise Exception("Orientation %r is not supported." % orientation)
         self.corner_position = position
