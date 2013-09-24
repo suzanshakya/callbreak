@@ -138,20 +138,37 @@ class CardUI:
         # only once displayed cards can be moved
         self.display(self.rect)
 
-    def move(self, new_pos, callback=None, delay=0.1, disappear=False):
+    def move(self, new_pos, before_callback=None, after_callback=None, disappear=False, delay=0.5):
         # only once displayed cards can be moved
         last_sprite_rect = self.rect
         positions = get_animation_positions(self.rect, new_pos, FPS, delay)
         for i, position in enumerate(positions):
             self.screen.fill(WHITE, last_sprite_rect)
-            last_sprite_rect = self.display(position)
-            if disappear and i == len(positions) - 1:
-                self.screen.fill(WHITE, last_sprite_rect)
-            if callback:
-                callback()
+            if before_callback:
+                before_callback()
+            if not (disappear and i == len(positions) - 1):
+                last_sprite_rect = self.display(position)
+            if after_callback:
+                after_callback()
             pygame.display.update()
             clock.tick(FPS)
         return last_sprite_rect
+
+    @staticmethod
+    def move_simultaneously(cards, all_new_pos, before_callback=None, after_callback=None, disappear=False, delay=0.5):
+        last_sprite_rects = [card.ui.rect for card in cards]
+        all_positions = [get_animation_positions(card.ui.rect, new_pos, FPS, delay) for card, new_pos in zip(cards, all_new_pos)]
+        for i, positions in enumerate(zip(*all_positions)):
+            [card.ui.screen.fill(WHITE, rect) for rect in last_sprite_rects]
+            if before_callback:
+                before_callback()
+            if not (disappear and i == len(all_positions[0]) - 1):
+                last_sprite_rects = [card.ui.display(positions[j]) for j, card in enumerate(cards)]
+            if after_callback:
+                after_callback()
+            pygame.display.update()
+            clock.tick(FPS)
+        return last_sprite_rects[0]
 
 
 class PlayerUI:
@@ -214,20 +231,25 @@ class PlayerUI:
         return self.rect.colliderect(rect)
 
     def throw(self, card, turn):
-        card.ui.move(self.throw_position, callback=self.display, delay=0.1)
+        before_callback = after_callback = None
+        if self.hide:
+            after_callback = self.display
+        else:
+            before_callback = self.display
+
+        card.ui.move(self.throw_position, before_callback, after_callback, delay=0.1)
+        # redraw because some overlapping motion loses some pixels
         for c in turn.cards:
             c.ui.redraw()
+        # this card is not yet appended to turn.cards
         card.ui.redraw()
         pygame.display.update()
 
     def collect(self, cards):
-        for card in cards:
-            card.ui.move(self.corner_position, callback=self.display, delay=0.1, disappear=True)
+        before_callback = None
+        after_callback = self.display
 
-    def clear_thrown(self):
-        self.card_rect.x, self.card_rect.y = self.throw_position
-        self.screen.fill(WHITE, card_rect)
-        return card_rect
+        CardUI.move_simultaneously(cards, [self.corner_position]*len(cards), before_callback, after_callback, disappear=True, delay=0.2)
 
     def display(self):
         self.dirty_rects[:] = []
