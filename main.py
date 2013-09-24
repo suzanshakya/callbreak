@@ -8,7 +8,6 @@ from pygame.locals import *
 from callbreak_card import CallBreak, GameTurn, Player
 
 WHITE = (255, 255, 255)
-BLUE = (0, 0, 255)
 FPS = 30
 clock = pygame.time.Clock()
 
@@ -182,29 +181,32 @@ class PlayerUI:
             return self.visible_card_rect
 
     def set_dimensions(self):
-        self.cards_v_spacing = 10 if self.hide else 30
-        self.cards_h_spacing = 10 if self.hide else 50
-
         _pad = 5
         padding = {'left': _pad, 'top': _pad, 'right': _pad, 'bottom': _pad}  # top, right, bottom, left
 
+        self.cards_v_spacing = 15 if self.hide else 30
+        self.cards_h_spacing = 20 if self.hide else (
+            self.board[0] - padding['left'] - padding['right'] - self.card_rect.width)/(13 - 1)
+
         if self.orientation == 'left':
-            position = padding['left'], (self.board[1] - self.card_rect.height)/2
-            throw_position = self.board[0]/2 - self.card_rect.width, 0
+            position = padding['left'], (self.board[1] - self.visible_card_rect.height - self.card_rect.height)/2
+            throw_position = self.board[0]/2 - self.visible_card_rect.width, (
+                                self.board[1] + self.hidden_card_rect.height)/2 - self.visible_card_rect.height
         elif self.orientation == 'top':
             position = (self.board[0] - self.card_rect.width)/2, padding['top']
-            throw_position = 0, self.board[1]/2 - self.card_rect.height
+            throw_position = (self.board[0] - self.visible_card_rect.width)/2, (self.board[1] + self.hidden_card_rect.height - 3*self.visible_card_rect.height)/2
         elif self.orientation == 'right':
             position = self.board[0] - padding['right'] - self.card_rect.width, \
-                        (self.board[1] - self.card_rect.height)/2
-            throw_position = self.card_rect.width  - self.board[0]/2, 0
+                        (self.board[1] - self.visible_card_rect.height - self.card_rect.height)/2
+            throw_position = self.board[0]/2, (
+                                self.board[1] + self.hidden_card_rect.height)/2 - self.visible_card_rect.height
         elif self.orientation == 'bottom':
             position = (self.board[0] - self.card_rect.width)/2, self.board[1] - padding['bottom'] - self.card_rect.height
-            throw_position = 0, self.card_rect.height - self.board[1]/2
+            throw_position = (self.board[0] - self.visible_card_rect.width)/2, (self.board[1] - self.visible_card_rect.height + self.hidden_card_rect.height)/2
         else:
             raise Exception("Orientation %r is not supported." % orientation)
         self.corner_position = position
-        self.throw_position = map(sum, zip(self.corner_position, throw_position))
+        self.throw_position = throw_position
 
     def collidepoint(x, y):
         return self.rect.collidepoint(x, y)
@@ -259,7 +261,7 @@ class CallBreakUI:
             self.resolution = get_device_resolution()
         else:
             self.resolution = (800, 600)
-            self.resolution = (540, 960)
+            self.resolution = (960, 540)
 
         self.board = self.resolution[0] * 0.8, self.resolution[1]
         pygame.time.set_timer(pygame.USEREVENT, int(1000 / FPS))
