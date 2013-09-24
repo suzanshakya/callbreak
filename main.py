@@ -51,7 +51,7 @@ def get_card_image():
     return '2C.gif'
 
 def load_image(path):
-    fullpath = os.path.join('data/out', path)
+    fullpath = os.path.join('data/img', path)
     image = pygame.image.load(fullpath)
     image = image.convert_alpha()
     return image
