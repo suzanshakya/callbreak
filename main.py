@@ -197,6 +197,10 @@ class PlayerUI:
         else:
             return self.visible_card_rect
 
+    def ready(self):
+        # this is also a flag that resets its cards upon unfold_cards call
+        self.rect = None
+
     def set_dimensions(self):
         padding = 5
 
@@ -268,7 +272,7 @@ class PlayerUI:
 
         all_new_positions = []
         for card in self.player.all_cards:
-            if not hasattr(card, 'ui'):
+            if self.rect is None:
                 CardUI(card, self.screen, hide=self.hide)
                 rect = card.ui.display((x, y))
                 self.dirty_rects.append(rect)
@@ -327,6 +331,7 @@ class CallBreakUI:
             game.ready()
 
             for player in players:
+                player.ready()
                 player.unfold_cards()
 
             game.start()
