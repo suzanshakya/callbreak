@@ -124,6 +124,8 @@ class CardUI:
         self.back_image = load_image(get_back_image())
 
     def display(self, position):
+        """renders the card at given position
+        """
         if self.hide:
             image = self.back_image
         else:
@@ -132,7 +134,10 @@ class CardUI:
         return self.rect
 
     def show(self, _show=True):
+        """show front face of the card
+        """
         self.hide = False if _show else True
+        self.redraw()
 
     def redraw(self):
         # only once displayed cards can be moved
@@ -221,42 +226,45 @@ class PlayerUI:
         self.corner_position = position
         self.throw_position = throw_position
 
-    def collidepoint(x, y):
-        return self.rect.collidepoint(x, y)
+    def collidepoint(self, point):
+        return self.rect.collidepoint(point)
 
     def colliderect(self, rect):
         return self.rect.colliderect(rect)
 
     def throw(self, card, turn):
         before_callback = []
-        after_callback = None
+        after_callback = []
 
-        if self.hide:
-            after_callback = self.redraw
-        else:
-            before_callback.append(self.redraw)
+        # redraw this players' cards
+        before_callback.append(lambda: self.redraw(to=card.index))
+        after_callback.append(lambda: self.redraw(_from=card.index))
 
         # redraw all thrown cards to prevent loss of some pixels due to overlapping betn cards
         before_callback.append(lambda: [card.ui.redraw() for card in turn.cards])
 
-        card.ui.show()
         card.ui.move(self.throw_position, before_callback, after_callback, delay=0.1)
-        # redraw because some overlapping motion loses some pixels
-        for c in turn.cards:
-            c.ui.redraw()
-        # this card is not yet appended to turn.cards
-        card.ui.redraw()
+        card.ui.show()
+
         pygame.display.update()
 
     def collect(self, cards):
+        # TODO fix: this can be confused with Player.collect() which is for collecting cards at the beginning
+        # collect cards after winning a turn
         before_callback = None
         after_callback = self.redraw
 
         CardUI.move_simultaneously(cards, [self.corner_position]*len(cards), before_callback, after_callback, disappear=True)
 
-    def redraw(self):
+    def redraw(self, _from=0, to=-1):
+        """ _from and to both inclusive
+        """
+        # find positive value for to
+        if to < 0:
+           to += 13
         for card in self.player.all_cards:
-            card.ui.redraw()
+            if _from <= card.index <= to:
+                card.ui.redraw()
 
     def unfold_cards(self):
         self.dirty_rects[:] = []

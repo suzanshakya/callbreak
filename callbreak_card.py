@@ -127,8 +127,10 @@ class Player:
         card.owner = self
         self.cards[card.suit.order].append(card)
 
-        if sum(len(each) for each in self.cards) == 13:
+        if len(self.all_cards) == 13:
             [each.sort(key=lambda c: -c.face.value) for each in self.cards]
+            for i, card in enumerate(self.all_cards):
+                card.index = i
 
     def get_greater_cards(self, turn, cards):
         greater_cards = filter(lambda c: c > max(turn.cards) if turn.cards else True, cards)
