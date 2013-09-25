@@ -1,9 +1,9 @@
 from __future__ import division
+import collections
 import os
 import time
 
 import pygame
-from pygame.locals import *
 
 from callbreak_card import CallBreak, GameTurn, Player
 
@@ -143,16 +143,22 @@ class CardUI:
 
     @staticmethod
     def move_simultaneously(cards, all_new_pos, before_callback=None, after_callback=None, disappear=False, delay=0.2):
+        def _callback(c):
+            if c:
+                if isinstance(c, collections.Iterable):
+                    [each() for each in c]
+                else:
+                    c()
         last_sprite_rects = [card.ui.rect for card in cards]
         all_positions = [get_animation_positions(card.ui.rect, new_pos, FPS, delay) for card, new_pos in zip(cards, all_new_pos)]
         for i, positions in enumerate(zip(*all_positions)):
             [card.ui.screen.fill(WHITE, rect) for rect in last_sprite_rects]
-            if before_callback:
-                before_callback()
+
+            _callback(before_callback)
             if not (disappear and i == len(all_positions[0]) - 1):
                 last_sprite_rects = [card.ui.display(positions[j]) for j, card in enumerate(cards)]
-            if after_callback:
-                after_callback()
+            _callback(after_callback)
+
             pygame.display.update()
             clock.tick(FPS)
         return last_sprite_rects
@@ -222,14 +228,19 @@ class PlayerUI:
         return self.rect.colliderect(rect)
 
     def throw(self, card, turn):
-        before_callback = after_callback = None
+        before_callback = []
+        after_callback = None
+
         if self.hide:
             after_callback = self.redraw
         else:
-            before_callback = self.redraw
+            before_callback.append(self.redraw)
+
+        # redraw all thrown cards to prevent loss of some pixels due to overlapping betn cards
+        before_callback.append(lambda: [card.ui.redraw() for card in turn.cards])
 
         card.ui.show()
-        card.ui.move(self.throw_position, before_callback, after_callback, delay=0.1)
+        card.ui.move(self.throw_position, before_callback, after_callback, delay=1)
         # redraw because some overlapping motion loses some pixels
         for c in turn.cards:
             c.ui.redraw()
