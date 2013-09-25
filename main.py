@@ -240,7 +240,7 @@ class PlayerUI:
         before_callback.append(lambda: [card.ui.redraw() for card in turn.cards])
 
         card.ui.show()
-        card.ui.move(self.throw_position, before_callback, after_callback, delay=1)
+        card.ui.move(self.throw_position, before_callback, after_callback, delay=0.1)
         # redraw because some overlapping motion loses some pixels
         for c in turn.cards:
             c.ui.redraw()
