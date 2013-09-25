@@ -44,7 +44,8 @@ def get_front_image(card):
     return img
 
 def get_back_image():
-    return 'Back.gif'
+#    return 'BlueBack.gif'
+    return 'RedBack.gif'
 
 def get_card_image():
     return '2C.gif'
@@ -200,11 +201,11 @@ class PlayerUI:
         self.rect = None
 
     def set_dimensions(self):
-        padding = 5
+        padding = 10
 
         self.cards_v_spacing = 15 if self.hide else 30
-        self.cards_h_spacing = 20 if self.hide else (
-            self.board[0] - 2*padding - self.card_rect.width)/(13 - 1)
+        self.cards_h_spacing = 20 if self.hide else min(60,
+            (self.board[0] - 2*padding - self.card_rect.width)/(13 - 1))
 
         if self.orientation == 'left':
             position = padding, (self.board[1] - self.visible_card_rect.height - self.card_rect.height)/2
@@ -243,8 +244,8 @@ class PlayerUI:
         # redraw all thrown cards to prevent loss of some pixels due to overlapping betn cards
         before_callback.append(lambda: [card.ui.redraw() for card in turn.cards])
 
-        card.ui.move(self.throw_position, before_callback, after_callback, delay=0.1)
         card.ui.show()
+        card.ui.move(self.throw_position, before_callback, after_callback, delay=0.1)
 
         pygame.display.update()
 
@@ -309,7 +310,7 @@ class CallBreakUI:
             self.resolution = (800, 600)
             self.resolution = (960, 540)
 
-        self.board = self.resolution[0] * 0.8, self.resolution[1]
+        self.board = self.resolution[0], self.resolution[1]
         pygame.time.set_timer(pygame.USEREVENT, int(1000 / FPS))
 
         self.screen = pygame.display.set_mode(self.resolution)
