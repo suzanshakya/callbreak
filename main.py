@@ -222,7 +222,7 @@ class PlayerUI:
             position = (self.board[0] - self.card_rect.width)/2, self.board[1] - padding - self.card_rect.height
             throw_position = (self.board[0] - self.visible_card_rect.width)/2, (self.board[1] - self.card_rect.height + self.hidden_card_rect.height)/2
         else:
-            raise Exception("Orientation %r is not supported." % orientation)
+            raise Exception("Orientation %r is not supported." % self.orientation)
         self.corner_position = position
         self.throw_position = throw_position
 
