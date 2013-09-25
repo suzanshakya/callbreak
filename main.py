@@ -8,6 +8,7 @@ import pygame
 from callbreak_card import CallBreak, GameTurn, Player
 
 WHITE = (255, 255, 255)
+BLUE = (0, 0, 0)
 FPS = 30
 clock = pygame.time.Clock()
 
@@ -49,6 +50,11 @@ def get_back_image():
 
 def get_card_image():
     return '2C.gif'
+
+def make_rect(surface, position):
+    rect = surface.get_rect()
+    rect.x, rect.y = position
+    return rect
 
 def load_image(path):
     fullpath = os.path.join('data/img', path)
@@ -188,7 +194,7 @@ class PlayerUI:
         self.throw_position = None
         self.name_position = None
 
-        font = pygame.font.SysFont("monospace", 16)
+        font = pygame.font.SysFont("monospace", 18)
         self.name = font.render(self.player.name, 1, (0, 0, 0))
 
         self.hidden_card_rect = load_image(get_back_image()).get_rect()  # used for its dimension
@@ -290,6 +296,7 @@ class PlayerUI:
             y = self.corner_position[1] - (total_cards - 1) / 2 * self.cards_v_spacing
             name = pygame.transform.rotate(self.name, 90)
 
+        self.screen.fill(WHITE, make_rect(name, self.name_position))
         self.screen.blit(name, self.name_position)
         all_new_positions = []
         for card in self.player.all_cards:
