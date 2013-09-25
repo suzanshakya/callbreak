@@ -8,7 +8,7 @@ from pygame.locals import *
 from callbreak_card import CallBreak, GameTurn, Player
 
 WHITE = (255, 255, 255)
-FPS = 30
+FPS = 60
 clock = pygame.time.Clock()
 
 try:
