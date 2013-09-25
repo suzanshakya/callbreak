@@ -182,8 +182,14 @@ class PlayerUI:
 
         self.dirty_rects = []  # set by unfold_cards()
         self.rect = None  # set by unfold_cards(), union rect of this players card
-        self.corner_position = None  # set by set_dimensions()
-        self.throw_position = None  # set by set_dimenstions()
+
+        # set by set_dimensions()
+        self.corner_position = None
+        self.throw_position = None
+        self.name_position = None
+
+        font = pygame.font.SysFont("monospace", 16)
+        self.name = font.render(self.player.name, 1, (0, 0, 0))
 
         self.hidden_card_rect = load_image(get_back_image()).get_rect()  # used for its dimension
         self.visible_card_rect = load_image(get_card_image()).get_rect()  # used for its dimension
@@ -201,7 +207,7 @@ class PlayerUI:
         self.rect = None
 
     def set_dimensions(self):
-        padding = 10
+        padding = 20
 
         self.cards_v_spacing = 15 if self.hide else 30
         self.cards_h_spacing = 20 if self.hide else min(60,
@@ -211,21 +217,26 @@ class PlayerUI:
             position = padding, (self.board[1] - self.visible_card_rect.height - self.card_rect.height)/2
             throw_position = self.board[0]/2 - self.visible_card_rect.width, (
                                 self.board[1] + self.hidden_card_rect.height)/2 - self.visible_card_rect.height
+            name_position = 0, position[1]
         elif self.orientation == 'top':
             position = (self.board[0] - self.card_rect.width)/2, padding
             throw_position = (self.board[0] - self.visible_card_rect.width)/2, (self.board[1] + self.card_rect.height - 3*self.visible_card_rect.height)/2
+            name_position = position[0], 0
         elif self.orientation == 'right':
             position = self.board[0] - padding - self.card_rect.width, \
                         (self.board[1] - self.visible_card_rect.height - self.card_rect.height)/2
             throw_position = self.board[0]/2, (
                                 self.board[1] + self.hidden_card_rect.height)/2 - self.visible_card_rect.height
+            name_position = self.board[0]-20, position[1]
         elif self.orientation == 'bottom':
             position = (self.board[0] - self.card_rect.width)/2, self.board[1] - padding - self.card_rect.height
             throw_position = (self.board[0] - self.visible_card_rect.width)/2, (self.board[1] - self.card_rect.height + self.hidden_card_rect.height)/2
+            name_position = position[0], self.board[1]-20
         else:
             raise Exception("Orientation %r is not supported." % self.orientation)
         self.corner_position = position
         self.throw_position = throw_position
+        self.name_position = name_position
 
     def collidepoint(self, point):
         return self.rect.collidepoint(point)
@@ -273,10 +284,13 @@ class PlayerUI:
         if self.orientation in ('top', 'bottom'):
             x = self.corner_position[0] - (total_cards - 1) / 2 * self.cards_h_spacing
             y = self.corner_position[1]
+            name = self.name
         else:
             x = self.corner_position[0]
             y = self.corner_position[1] - (total_cards - 1) / 2 * self.cards_v_spacing
+            name = pygame.transform.rotate(self.name, 90)
 
+        self.screen.blit(name, self.name_position)
         all_new_positions = []
         for card in self.player.all_cards:
             if self.rect is None:
