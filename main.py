@@ -139,20 +139,7 @@ class CardUI:
         self.display(self.rect)
 
     def move(self, new_pos, before_callback=None, after_callback=None, disappear=False, delay=0.2):
-        # only once displayed cards can be moved
-        last_sprite_rect = self.rect
-        positions = get_animation_positions(self.rect, new_pos, FPS, delay)
-        for i, position in enumerate(positions):
-            self.screen.fill(WHITE, last_sprite_rect)
-            if before_callback:
-                before_callback()
-            if not (disappear and i == len(positions) - 1):
-                last_sprite_rect = self.display(position)
-            if after_callback:
-                after_callback()
-            pygame.display.update()
-            clock.tick(FPS)
-        return last_sprite_rect
+        return CardUI.move_simultaneously([self.card], [new_pos], before_callback, after_callback, disappear, delay)
 
     @staticmethod
     def move_simultaneously(cards, all_new_pos, before_callback=None, after_callback=None, disappear=False, delay=0.2):
