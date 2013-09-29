@@ -221,22 +221,22 @@ class PlayerUI:
 
         if self.orientation == 'left':
             position = padding, (self.board[1] - self.visible_card_rect.height - self.card_rect.height)/2
-            throw_position = self.board[0]/2 - self.visible_card_rect.width, (
+            throw_position = self.board[0]/2 - self.visible_card_rect.width + 10, (
                                 self.board[1] + self.hidden_card_rect.height)/2 - self.visible_card_rect.height
             name_position = 0, position[1]
         elif self.orientation == 'top':
             position = (self.board[0] - self.card_rect.width)/2, padding
-            throw_position = (self.board[0] - self.visible_card_rect.width)/2, (self.board[1] + self.card_rect.height - 3*self.visible_card_rect.height)/2
+            throw_position = (self.board[0] - self.visible_card_rect.width)/2, (self.board[1] + self.card_rect.height - 3*self.visible_card_rect.height)/2 + 10
             name_position = position[0], 0
         elif self.orientation == 'right':
-            position = self.board[0] - padding - self.card_rect.width, \
+            position = self.board[0] - padding - self.card_rect.width - 10, \
                         (self.board[1] - self.visible_card_rect.height - self.card_rect.height)/2
             throw_position = self.board[0]/2, (
                                 self.board[1] + self.hidden_card_rect.height)/2 - self.visible_card_rect.height
             name_position = self.board[0]-20, position[1]
         elif self.orientation == 'bottom':
             position = (self.board[0] - self.card_rect.width)/2, self.board[1] - padding - self.card_rect.height
-            throw_position = (self.board[0] - self.visible_card_rect.width)/2, (self.board[1] - self.card_rect.height + self.hidden_card_rect.height)/2
+            throw_position = (self.board[0] - self.visible_card_rect.width)/2, (self.board[1] - self.card_rect.height + self.hidden_card_rect.height)/2 - 10
             name_position = position[0], self.board[1]-20
         else:
             raise Exception("Orientation %r is not supported." % self.orientation)
@@ -313,7 +313,7 @@ class PlayerUI:
                 y += self.cards_v_spacing
 
         if all_new_positions:
-            self.dirty_rects[:] = CardUI.move_simultaneously(self.player.all_cards, all_new_positions, delay=0.1)
+            self.dirty_rects[:] = CardUI.move_simultaneously(self.player.all_cards, all_new_positions, delay=0.2)
         else:
             pygame.display.update()
 
