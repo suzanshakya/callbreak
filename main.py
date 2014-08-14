@@ -4,13 +4,154 @@ import os
 import time
 import sys
 import pygame
+import math
+from pgu import text, gui as pgui
 from callbreak_card import CallBreak, GameTurn, Player
+from pygame.locals import *
 
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
 BLACK = (0, 0, 0)
 FPS = 30
 clock = pygame.time.Clock()
+screenSize = (960, 540)
+lines = []
+lineLimit = 20
+
+def logInputAction(txt):
+    text = txt.value
+    return text
+
+txts=[]
+
+def btnOk():
+    # import ipdb;ipdb.set_trace()
+    cb_ui = CallBreakUI()
+    cb_ui.MainLoop()
+    
+def btnCnl():
+    screen = pygame.display.set_mode((960, 540), 0, 32)
+    cb_ui = CallBreakUI()
+    funcs = {'Start': cb_ui.MainLoop,
+             'Set Players': setplayer,
+             'Quit': sys.exit }
+    
+    gm = GameMenu(screen,  funcs.keys(), funcs)
+    gm.run()
+    # import ipdb;ipdb.set_trace() 
+    # txts.remove[txts[0]]
+    # txts.remove[txts[1]]
+    # txts.remove[txts[2]]
+    # txts.remove[txts[3]]
+  
+
+def getname1():
+    return txts[0].value
+
+def getname2():
+    return txts[1].value
+
+def getname3():
+    return txts[2].value
+
+def getname4():
+    return txts[3].value
+
+def setplayer():
+   
+    global lines, txts
+    pygame.init()
+    pygame.font.init()
+    font = pygame.font.SysFont("monospace", 18)
+    # fontBig = pygame.font.SysFont("monospace", 18)
+    # fontSub = pygame.font.SysFont("monospace", 18)
+
+    screen = pygame.display.set_mode(screenSize)
+    gui = pgui.App()
+    textArea1 = pygame.Rect(370, 20, 250, 320)
+    textArea2 = pygame.Rect(370, 30, 250, 320)
+    textArea3 = pygame.Rect(370, 40, 250, 320)
+    textArea4 = pygame.Rect(370, 50, 250, 320)
+
+
+    # layout using document
+    lo = pgui.Container(width=350)
+
+    # create page label
+    # lo.block(align=-1) #lo.br(8) #lo.tr()
+    title = pgui.Label("CallBreak Player Name Setting", font=font) 
+    lo.add(title,29,13)
+
+    # create txt box label
+    txtl1 = pgui.Label("Ai1", font=font)
+    lo.add(txtl1,1,151) 
+    txtl2 = pgui.Label("Ai2", font=font)
+    lo.add(txtl2,1,170) 
+    txtl3 = pgui.Label("Ai3", font=font)
+    lo.add(txtl3,1,190) 
+    txtl4 = pgui.Label("You", font=font)
+    lo.add(txtl4,1,210) 
+
+    # create text box
+    txt1 = pgui.Input(None, size=45)
+    txt1.connect(pgui.BLUR, logInputAction, txt1)
+    lo.add(txt1,35,149)
+    # name.append(txt1)
+    txts.append(txt1)
+    
+    txt2 = pgui.Input(None, size=45)
+    txt2.connect(pgui.BLUR, logInputAction, txt2)
+    lo.add(txt2,35,169)
+    txts.append(txt2)
+    # name.append(txt2)
+    txt3 = pgui.Input(None, size=45)
+    txt3.connect(pgui.BLUR, logInputAction, txt3)
+    lo.add(txt3,35,189)
+    txts.append(txt3)
+    txt4 = pgui.Input(None, size=45)
+    txt4.connect(pgui.BLUR, logInputAction, txt4)
+    lo.add(txt4,35,209)
+    txts.append(txt4)
+   
+
+    btn1 = pgui.Button("OK")
+    btn1.connect(pgui.CLICK, lambda: btnOk())
+    lo.add(btn1,36,250)
+
+    btn2 = pgui.Button("Cancel")
+    btn2.connect(pgui.CLICK, btnCnl)
+    lo.add(btn2,133,250)  
+
+    screen.fill(WHITE)
+
+    gui.init(lo)
+   
+    while 1:
+        #Handle Input Events
+        time.sleep(0.03)
+        for event in pygame.event.get():
+
+            if event.type == QUIT:
+                return
+            elif event.type == KEYDOWN and event.key == K_ESCAPE:
+                return
+        
+        # pass event to gui
+        gui.event(event)
+
+        # clear background
+        screen.fill((250, 250, 250))
+        
+        # Draw GUI
+        gui.paint(screen)
+        edText = "\n".join(lines)
+        text.writepre(screen, font, textArea1, (0,0,0), edText)
+        text.writepre(screen, font, textArea2, (1,1,1), edText)
+        text.writepre(screen, font, textArea3, (2,2,2), edText)
+        text.writepre(screen, font, textArea4, (3,3,3), edText)
+        pygame.display.flip()
+
+
 
 class MenuItem(pygame.font.Font):
     def __init__(self, text, font=None, font_size=30,
@@ -149,7 +290,6 @@ class GameMenu:
             pygame.display.flip()
             self.screen.fill((255,255,255))
 
-
 try:
     import android 
 except ImportError:
@@ -219,6 +359,20 @@ def start(self):
 
     return winning_card
 GameTurn.start = start
+
+# GameTurn_score = GameTurn.score
+# def score(self):
+#     wc = []
+#     winning_card = GameTurn_score(self)    
+#     wc.append(winning_card)
+#     for card in wc:
+#         winner = wc.owner
+#     time.sleep(1)
+
+#     winner.ui.collect(self.cards)
+
+#     return winner
+# GameTurn.score = score
 
 
 Player_play = Player.play
@@ -459,6 +613,7 @@ class PlayerUI:
 
 
 class CallBreakUI:
+
     def __init__(self):
         pygame.init()
         if android:
@@ -468,21 +623,41 @@ class CallBreakUI:
             self.resolution = (800, 600)
             self.resolution = (960, 540)
 
+        pygame.display.set_caption('CallBreak')
         self.board = self.resolution[0], self.resolution[1]
         pygame.time.set_timer(pygame.USEREVENT, int(1000 / FPS))
-
         self.screen = pygame.display.set_mode(self.resolution)
         self.screen.fill(WHITE)
-        pygame.display.set_caption('CallBreak')
-
 #        icon = load_image("icon.png")
 #        pygame.display.set_icon(icon)
 
     def MainLoop(self):
-        player1 = Player('Sujan', is_bot=True)
-        player2 = Player('Sudeep', is_bot=True)
-        player3 = Player('Santosh', is_bot=True)
-        player4 = Player('Rupa', is_bot=False)
+        player_default=True
+
+        screen = pygame.display.set_mode((960, 540))
+
+        font = pygame.font.SysFont("monospace", 18)
+        gui = pgui.App()
+        textArea1 = pygame.Rect(370, 20, 20, 20)
+        lo = pgui.Container(width=350)
+        num = pgui.Input("Call--", size=10)
+        num.connect(pgui.BLUR, logInputAction, num)
+        lo.add(num,1,151)
+
+        gui.init(lo)
+       
+
+        if player_default:       
+            player1 = Player(getname1(), is_bot=True)
+            player2 = Player(getname2(), is_bot=True)
+            player3 = Player(getname3(), is_bot=True)
+            player4 = Player(getname4(), is_bot=False)
+
+        else:
+            player1 = Player("Sujan", is_bot=True)
+            player2 = Player("Sudeep", is_bot=True)
+            player3 = Player("Santosh", is_bot=True)
+            player4 = Player("Rupa", is_bot=False)
 
         player1_ui = PlayerUI(player1, self.screen, self.board, 'left', hide=True)
         player2_ui = PlayerUI(player2, self.screen, self.board, 'top', hide=True)
@@ -492,28 +667,35 @@ class CallBreakUI:
         players = [player1_ui, player2_ui, player3_ui, player4_ui]
         game = CallBreak([ui.player for ui in players])
 
-        while True:
-            game.ready()
+        
+        while True:            
+            for event in pygame.event.get():
+                if event.type == QUIT:
+                    return
+                elif event.type == KEYDOWN and event.key == K_ESCAPE:
+                    return
 
+            # pass event to gui
+                gui.event(event)
+            self.screen.fill(WHITE)
+
+            gui.paint(screen)
+            edText = "\n".join(lines)
+            text.writepre(self.screen, font, textArea1, (0,0,0), edText)
+
+            game.ready()
             for player in players:
                 player.ready()
                 player.unfold_cards()
-
             game.start()
+            pygame.display.flip()
 
-
-            # Android-specific:
-            #if android:
-            #    if android.check_pause():
-            #        android.wait_for_resume()
-
-
-
-
+           
 def main():
-    screen = pygame.display.set_mode((640, 480), 0, 32)
+    screen = pygame.display.set_mode((960, 540), 0, 32)
     cb_ui = CallBreakUI()
     funcs = {'Start': cb_ui.MainLoop,
+             'Set Players': setplayer,
              'Quit': sys.exit }
     gm = GameMenu(screen,  funcs.keys(), funcs)
     
