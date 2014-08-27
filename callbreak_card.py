@@ -21,6 +21,20 @@ Suits = [
     Suit('diamond', 1, 3, u'\u2662'),
 ]
 
+def make_card(face, suit):
+    face = face.upper()
+    for f in Faces:
+        if f.name == face:
+            break
+    else:
+        raise Exception("Face name supports A, 2-10, J, Q, and K. (%r given)" % face)
+    suit = suit.lower()
+    for s in Suits:
+        if s.name == suit:
+            break
+    else:
+        raise Exception("Suit name accepts spade, heart, club and diamont. (%r given)" % suit)
+    return Card(f, s)
 
 class Card:
     def __init__(self, face, suit):
