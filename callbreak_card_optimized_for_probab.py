@@ -21,20 +21,6 @@ Suits = [
     Suit('diamond', 1, 3, u'\u2662'),
 ]
 
-def make_card(face, suit):
-    face = face.upper()
-    for f in Faces:
-        if f.name == face:
-            break
-    else:
-        raise Exception("Face name supports A, 2-10, J, Q, and K. (%r given)" % face)
-    suit = suit.lower()
-    for s in Suits:
-        if s.name == suit:
-            break
-    else:
-        raise Exception("Suit name accepts spade, heart, club and diamont. (%r given)" % suit)
-    return Card(f, s)
 
 class Card:
     def __init__(self, face, suit):
@@ -83,8 +69,6 @@ class GameTurn:
         logging.debug("-----")
         return winning_card
 
-    
-
     def iterator(self):
         turn = self.starter.turn
         while True:
@@ -119,7 +103,13 @@ class CallBreak:
             starter = winning_card.owner
 
     def shuffle(self):
-        random.shuffle(self.cards)
+        # sattoloCycle
+        items = self.cards
+        randrange = random.randrange
+
+        for i in xrange(len(items)-1, 0, -1):
+            j = randrange(i)  # 0 <= j <= i-1
+            items[j], items[i] = items[i], items[j]
 
     def distribute(self):
         player_count = len(self.players)
@@ -140,13 +130,13 @@ class Player:
         return list(itertools.chain.from_iterable(self.cards))
 
     def collect(self, card):
-        card.owner = self
+#        card.owner = self
         self.cards[card.suit.order].append(card)
 
-        if len(self.all_cards) == 13:
-            [each.sort(key=lambda c: -c.face.value) for each in self.cards]
-            for i, card in enumerate(self.all_cards):
-                card.index = i
+#        if len(self.all_cards) == 13:
+#            [each.sort(key=lambda c: -c.face.value) for each in self.cards]
+#            for i, card in enumerate(self.all_cards):
+#                card.index = i
 
     def get_greater_cards(self, turn, cards):
         greater_cards = filter(lambda c: c > max(turn.cards) if turn.cards else True, cards)
@@ -198,17 +188,19 @@ class Player:
 
     def __repr__(self):
         return self.name
-  
 
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
+
     sujan = Player('Sujan', is_bot=True)
     sudeep = Player('Sudeep')
     santosh = Player('Santosh')
     rupa = Player('Rupa')
+
     # add players in clockwise direction
     players = [sujan, sudeep, santosh, rupa]
+
     game = CallBreak(players)
     game.ready()
     game.start()
