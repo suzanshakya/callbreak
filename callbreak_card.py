@@ -69,6 +69,8 @@ class GameTurn:
         logging.debug("-----")
         return winning_card
 
+    
+
     def iterator(self):
         turn = self.starter.turn
         while True:
@@ -182,19 +184,17 @@ class Player:
 
     def __repr__(self):
         return self.name
+  
 
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
-
     sujan = Player('Sujan', is_bot=True)
     sudeep = Player('Sudeep')
     santosh = Player('Santosh')
     rupa = Player('Rupa')
-
     # add players in clockwise direction
     players = [sujan, sudeep, santosh, rupa]
-
     game = CallBreak(players)
     game.ready()
     game.start()

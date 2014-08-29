@@ -38,12 +38,6 @@ def btnCnl():
     
     gm = GameMenu(screen,  funcs.keys(), funcs)
     gm.run()
-    # import ipdb;ipdb.set_trace() 
-    # txts.remove[txts[0]]
-    # txts.remove[txts[1]]
-    # txts.remove[txts[2]]
-    # txts.remove[txts[3]]
-  
 
 def getname1():
     return txts[0].value
@@ -57,15 +51,13 @@ def getname3():
 def getname4():
     return txts[3].value
 
-def setplayer():
-   
+def setplayer():   
     global lines, txts
     pygame.init()
     pygame.font.init()
     font = pygame.font.SysFont("monospace", 18)
     # fontBig = pygame.font.SysFont("monospace", 18)
     # fontSub = pygame.font.SysFont("monospace", 18)
-
     screen = pygame.display.set_mode(screenSize)
     gui = pgui.App()
     textArea1 = pygame.Rect(370, 20, 250, 320)
@@ -349,16 +341,6 @@ def unionall_rects(rects):
         return pygame.Rect(rects[0]).unionall(rects[1:])
 
 
-# GameTurn_start = GameTurn.start
-# def start(self):
-#     winning_card = GameTurn_start(self)
-#     winner = winning_card.owner
-#     time.sleep(1)
-
-#     winner.ui.collect(self.cards)
-
-#     return winning_card
-# GameTurn.start = start
 
 GameTurn_start = GameTurn.start
 def start(self):
@@ -369,22 +351,6 @@ def start(self):
     winner.ui.collect(self.cards)
     return winning_card
 GameTurn.start = start
-
-# def get_winner(self):
-#     w = []
-#     s = start(self)
-#     w.append(s)
-#     print w
-#     return w
-
-
-
-# def scores(self):
-#     lst = get_winner()
-#     stats = {}
-#     for x in lst : 
-#         stats[x] = stats.get(x, 0) + 1 
-#     print stats
 
 
 
@@ -625,9 +591,7 @@ class PlayerUI:
 
         self.rect = unionall_rects(self.dirty_rects)
 
-# def set_call():
-#     n = raw_input("Call..")
-#     return n
+
 
 class CallBreakUI:
     # import ipdb; ipdb.set_trace();
@@ -660,23 +624,21 @@ class CallBreakUI:
         gui = pgui.App()
 
         def btncall():
-            pygame.display.update()
-            # self.screen.fill(WHITE) 
-            print num.value
+
+            print edText
             return edText
+
         textArea1 = pygame.Rect(517, 358, 20, 20)
         lo = pgui.Container(width=350)
 
-        btn1 = pgui.Button("Call")
-        btn1.connect(pgui.CLICK, lambda: btncall())
-        lo.add(btn1,167,202)
-            
+        # btn1 = pgui.Button("Call")
+        # btn1.connect(pgui.CLOSE, lambda: btncall())
+        # lo.add(btn1,167,202)
        
-        # import ipdb; ipdb.set_trace();
         num = pgui.Input(None, size=5)
         num.connect(pgui.ScrollArea, logInputAction, num)
         lo.add(num,110,200)
-
+        # import ipdb; ipdb.set_trace();
        
 
         def set_call():
@@ -691,9 +653,9 @@ class CallBreakUI:
             player4 = Player(getname4(), is_bot=False)
 
         else:
-            player1 = Player("Ai 1", is_bot=True)
-            player2 = Player("Ai 2", is_bot=True)
-            player3 = Player("Ai 3", is_bot=True)
+            player1 = Player("Ai1", is_bot=True)
+            player2 = Player("Ai2", is_bot=True)
+            player3 = Player("Ai3", is_bot=True)
             player4 = Player("You", is_bot=False)
         
         player1_ui = PlayerUI(player1, self.screen, self.board, 'left', hide=True)
@@ -713,8 +675,6 @@ class CallBreakUI:
                     sys.exit()
                 elif event.type == KEYDOWN and event.key == K_ESCAPE:
                     return
-               
-                
 
             self.screen.fill(WHITE)
                      
@@ -728,17 +688,13 @@ class CallBreakUI:
             screen.blit(scoretext2, (238, 20))
             screen.blit(scoretext3, (855, 20))
             screen.blit(scoretext4, (20, 380))
-
-
             game.ready()
-
-            # import ipdb; ipdb.set_trace();
             for player in players:
                 player.ready()
                 player.unfold_cards()
             
             user_call = False
-            
+           
             while not user_call: 
 
                 for event in pygame.event.get():
@@ -752,16 +708,13 @@ class CallBreakUI:
                     gui.paint(screen)
                     pygame.display.flip()
                     edText = set_call()
-                    text.writepre(self.screen, font, textArea1, (1,1,1), edText)
+                    call = font.render("{0}".format(edText), 1, (1,1,1))
 
-                    # if edText!=0:
-                    #     user_call = True
-                if btncall():
-                    user_call = True       
-
-            import ipdb; ipdb.set_trace();
-
-                    
+                    if set_call():
+                        user_call = True 
+                        screen.blit(call, (400, 358))
+                        pygame.display.update()                        
+                        pygame.display.flip()
 
             pygame.display.update()   
             game.start()
@@ -775,7 +728,6 @@ def main():
              'Set Players': setplayer,
              'Quit': sys.exit }
     gm = GameMenu(screen,  funcs.keys(), funcs)
-    
     gm.run()
 
 
